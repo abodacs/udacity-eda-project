@@ -1,0 +1,321 @@
+Exploring Prosper Loan Data by Abdullah Muhammed
+========================================================
+## Abstract
+
+[Prosper](https://www.prosper.com/) is a peer-to-peer lending platform that aims to connect people who need money with those who have money to invest. In this Exploratory Data Analysis, I explore a Prosper dataset  contains 113,937 loans with 81 variables on each loan, including loan amount, borrower rate (or interest rate), current loan status, borrower income, borrower employment status, borrower credit history, and the latest payment information.
+
+> **Tip**: One of the requirements of this project is that your code follows
+good formatting techniques, including limiting your lines to 80 characters or
+less. If you're using RStudio, go into Preferences \> Code \> Display to set up
+a margin line to help you keep track of this guideline!
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, packages}
+# Load all of the packages that you end up using in your analysis in this code
+# chunk.
+
+# Notice that the parameter "echo" was set to FALSE for this code chunk. This
+# prevents the code from displaying in the knitted HTML output. You should set
+# echo=FALSE for all code chunks in your file, unless it makes sense for your
+# report to show the code that generated a particular plot.
+
+# The other parameters for "message" and "warning" should also be set to FALSE
+# for other code chunks once you have verified that each plot comes out as you
+# want it to. This will clean up the flow of your report.
+
+library(ggplot2)
+library(knitr) 
+library(ggthemes) 
+library(gridExtra) 
+library(dplyr)
+library(tidyr) 
+theme_set(theme_economist())
+```
+### Exploring and Cleaning Variables
+
+# Load the Data
+```{r echo=FALSE, Load_the_Data}
+
+prosper <- read.csv('prosperLoanData.csv')
+summary(prosper)
+str(prosper)
+
+```
+```{r}
+# Convert ListingCategory from numeric to factor variable using the keys given in the Google Spreadsheet.
+labels <- c("Debt Consolidation", "Home Improvement", "Business", "Personal Loan", "Student Use", "Auto", "Baby & Adoption", "Boat", "Cosmetic Procedure", "Engagement Ring", "Green Loans", "Household Expenses", "Large Purchases", "Medical/Dental", "Motorcycle", "RV", "Taxes", "Vacation", "Wedding", "Other", "Not Applicable")
+
+prosper$ListingCategory <- factor(prosper$ListingCategory..numeric.,
+                                          levels = c(1:6, 8:20, 7, 0),
+                                          labels = labels)
+ggplot(prosper, aes(x=ListingCategory)) +
+    geom_bar() +
+    theme(axis.text.x = element_text(angle = 90))+
+  ggtitle('Number of Loans by Category') +
+  xlab('Category') +
+  ylab('Number of Loans')
+
+```
+ Majority loans are debt consolidations, with small but significant amounts of home improvement and business loans
+> **Tip**: Before you create any plots, it is a good idea to provide a short
+introduction into the dataset that you are planning to explore. Replace this
+quoted text with that general information!
+
+# Univariate Plots Section
+
+> **Tip**: In this section, you should perform some preliminary exploration of
+your dataset. Run some summaries of the data and create univariate plots to
+understand the structure of the individual variables in your dataset. Don't
+forget to add a comment after each plot or closely-related group of plots!
+There should be multiple code chunks and text sections; the first one below is
+just to help you get started.
+
+```{r echo=FALSE, Univariate_Plots}
+qplot(x = LoanOriginalAmount, data = prosper,
+      binwidth = 1000, colour = I("#424242"), fill = I("#0077C0")) +
+  scale_x_continuous(breaks = seq(0, 35000, 5000))
+```
+Most loans lies below $15,000, which indicates that most of the borrowers using Prosper are looking for small(er) loans  and spikes in the count on round values like $10,000, $15,000, and even $20,000 and $25,000.
+
+```{r}
+summary(prosper$LoanOriginalAmount)
+
+```
+The minimum loan is 1000, with the median of 6500 and mean of 8337.
+
+```{r}
+qplot(IncomeRange, data = prosper) + 
+    theme(axis.text.x = element_text(angle = -90))
+```
+Most of borrowers Income ranges from $25,000 - $74,999.
+Question: Why does there is borrowers with "Zero"" income?
+Maybe exploring more information about those borrowers would make it clearer that why they can get the loan.
+
+
+
+```{r}
+ggplot(aes(x=BorrowerRate),data = prosper)+
+  geom_histogram(binwidth = 0.01, fill='#5760AB')+
+    scale_x_continuous(limits = c(0.0, 0.4), breaks = seq(0.0, 0.4, 0.1))
+
+```
+```{r}
+summary(prosper$BorrowerRate)
+```
+No model distibution for borrowers rate, with peak around 0.16. There's spike occurs, around 0.3.
+```{r}
+# Formatting dates
+prosper$ListingCreationDate <- prosper$ListingCreationDate %>%
+  as.Date(format = '%Y-%m-%d')
+
+prosper$LoanOriginationDate <- prosper$LoanOriginationDate %>%
+  as.Date(format = '%Y-%m-%d')
+
+
+range(prosper$ListingCreationDate)
+
+```
+
+```{r}
+
+ggplot(aes(x = LoanOriginationDate), data = prosper) +
+  geom_histogram(binwidth = 30, color = 'black', fill = '#099DD9') +
+  ggtitle('Number of Loans by Date') +
+  xlab('Date') +
+  ylab('Number of Loans')
+
+```
+
+ There was a dip in loans offered in 2009 corresponding to their [Prosper SEC relaunch](https://en.wikipedia.org/wiki/Prosper_Marketplace#2009_post_SEC_relaunch), but there's been a growth of loan offerings ever since. The dip in 2014 reflects the fact that the data was collected up until 03/11/2014
+
+```{r}
+# Histogram of Amount Loaned by Propser Rating
+prosper$ProsperRating <-
+  factor(prosper$ProsperRating..Alpha,
+         levels = c('AA', 'A', 'B', 'C', 'D', 'E', 'HR', 'NA'))
+ggplot(prosper, aes(ProsperRating, LoanOriginalAmount)) +
+  geom_bar(stat='identity', aes(fill = ProsperRating)) +
+  ggtitle('Amount Loaned by Prosper Rating') +
+  xlab('Prosper Rating') +
+  ylab('Amount Loaned')
+
+```
+The plot looked approximately normally distrubuted, except for "NA" Not Applicable.'C' is the most frequent rating in our data and the highest (AA) and the lowest (HR) rating are less common comparing with other ratings in between.Null values because Prosper Rating only applicable for loans originated after July 2009.
+
+```{r}
+# Boxplots of loan amounts by Prosper Rating
+ggplot(subset(prosper, !is.na(ProsperRating)),
+       aes(ProsperRating, LoanOriginalAmount)) +
+  geom_boxplot(aes(color = ProsperRating))
+
+```
+These boxplots shows with higher prosper rating you get higher loan amounts, and less than 'C' you chance decrease.
+```{r}
+ggplot(aes(x = reorder(Occupation, Occupation,
+                       function(x) -length(x)),
+           fill = I("#0077C0")),
+       data = prosper) +
+  geom_bar() +
+  xlab("Occupation") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+ 'Other' and 'Professional' are ambiguous options for occupations and they are away from the rest of the occupations include analysts, accountants, computer programmers, teachers and executives.
+```{r}
+ggplot(aes(x = reorder(BorrowerState, BorrowerState, 
+                       function(x) length(x)),
+           fill = I("#0077C0")),data = prosper) +
+  geom_bar() +
+  xlab("Borrower State") +
+theme(axis.text.x = element_text(angle = 90))
+```
+ California is by far the biggest, and that was expected because it is the state where Prosper was founded followed by other popular states include Florida, New York, Texas and Illinois.
+ 
+```{r}
+ggplot(aes(x = Term), data = prosper) +
+  geom_bar( binwidth =2)+
+  ggtitle('Number of Loans by Term') +
+  xlab('Term') +
+  ylab('Number of Loans')
+```
+```{r}
+summary(prosper$Term)
+
+```
+Most loan-terms are 36-month, with some 60-month, and a negligible amount of 12-month terms.Interestingly there are no records with 24 and 48 months tenure.
+> **Tip**: Make sure that you leave a blank line between the start / end of
+each code block and the end / start of your Markdown text so that it is
+formatted nicely in the knitted text. Note as well that text on consecutive
+lines is treated as a single space. Make sure you have a blank line between
+your paragraphs so that they too are formatted for easy readability.
+
+# Univariate Analysis
+
+> **Tip**: Now that you've completed your univariate explorations, it's time to
+reflect on and summarize what you've found. Use the questions below to help you
+gather your observations and add your own if you have other thoughts!
+
+### What is the structure of your dataset?
+There are 113937 loans in this dataset and 81 dataset (I only use 11 among them)
+
+Other observations:
+
+- Most loans are taken for debt consolidation. Individuals in all income categories take loans for debt consolidation and the amount varies largely
+
+- Individuals earning between $25k and $50k constitute the largest group of borrowers. Those with over $100k income borrow more
+
+
+### What is/are the main feature(s) of interest in your dataset?
+The main features of the dataset is the Prosper rating.
+
+### What other features in the dataset do you think will help support your \
+investigation into your feature(s) of interest?
+
+
+### Did you create any new variables from existing variables in the dataset?
+For this dataset, I don't create new feature.
+
+### Of the features you investigated, were there any unusual distributions? \
+Did you perform any operations on the data to tidy, adjust, or change the form \
+of the data? If so, why did you do this?
+Most of the distributions are positively skewed and there's also peopole  who makes 0 dolars monthly salary.
+Interestingly there are no Term with 24 and 48 months tenure.
+
+I adjust "ProsperRating" based on ProsperRating..Alpha.
+Formatting dates "ListingCreationDate" and "LoanOriginationDate" instead of using them as factor.
+
+# Bivariate Plots Section
+
+> **Tip**: Based on what you saw in the univariate plots, what relationships
+between variables might be interesting to look at in this section? Don't limit
+yourself to relationships between a main output feature and one of the
+supporting variables. Try to look at relationships between supporting variables
+as well.
+
+```{r echo=FALSE, Bivariate_Plots}
+
+```
+
+# Bivariate Analysis
+
+> **Tip**: As before, summarize what you found in your bivariate explorations
+here. Use the questions below to guide your discussion.
+
+### Talk about some of the relationships you observed in this part of the \
+investigation. How did the feature(s) of interest vary with other features in \
+the dataset?
+
+### Did you observe any interesting relationships between the other features \
+(not the main feature(s) of interest)?
+
+### What was the strongest relationship you found?
+
+
+# Multivariate Plots Section
+
+> **Tip**: Now it's time to put everything together. Based on what you found in
+the bivariate plots section, create a few multivariate plots to investigate
+more complex interactions between variables. Make sure that the plots that you
+create here are justified by the plots you explored in the previous section. If
+you plan on creating any mathematical models, this is the section where you
+will do that.
+
+```{r echo=FALSE, Multivariate_Plots}
+
+```
+
+# Multivariate Analysis
+
+### Talk about some of the relationships you observed in this part of the \
+investigation. Were there features that strengthened each other in terms of \
+looking at your feature(s) of interest?
+
+### Were there any interesting or surprising interactions between features?
+
+### OPTIONAL: Did you create any models with your dataset? Discuss the \
+strengths and limitations of your model.
+
+------
+
+# Final Plots and Summary
+
+> **Tip**: You've done a lot of exploration and have built up an understanding
+of the structure of and relationships between the variables in your dataset.
+Here, you will select three plots from all of your previous exploration to
+present here as a summary of some of your most interesting findings. Make sure
+that you have refined your selected plots for good titling, axis labels (with
+units), and good aesthetic choices (e.g. color, transparency). After each plot,
+make sure you justify why you chose each plot by describing what it shows.
+
+### Plot One
+```{r echo=FALSE, Plot_One}
+
+```
+
+### Description One
+
+
+### Plot Two
+```{r echo=FALSE, Plot_Two}
+
+```
+
+### Description Two
+
+
+### Plot Three
+```{r echo=FALSE, Plot_Three}
+
+```
+
+### Description Three
+
+------
+
+# Reflection
+
+> **Tip**: Here's the final step! Reflect on the exploration you performed and
+the insights you found. What were some of the struggles that you went through?
+What went well? What was surprising? Make sure you include an insight into
+future work that could be done with the dataset.
+
+> **Tip**: Don't forget to remove this, and the other **Tip** sections before
+saving your final work and knitting the final report!
