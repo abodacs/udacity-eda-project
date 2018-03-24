@@ -17,8 +17,6 @@ Exploring Prosper Loan Data by Abdullah Muhammed
 # The other parameters for "message" and "warning" should also be set to FALSE
 # for other code chunks once you have verified that each plot comes out as you
 # want it to. This will clean up the flow of your report.
-update.packages(ask = FALSE)
-
 library(ggplot2)
 library(knitr) 
 library(ggthemes) 
@@ -35,10 +33,6 @@ theme_set(theme_economist())
  - What are the characteristics of the loan (loan amount, term, etc.)?
  - Who uses Prosper and where?
  - Why people use Prosper?
- 
-> **Tip**: Before you create any plots, it is a good idea to provide a short
-introduction into the dataset that you are planning to explore. Replace this
-quoted text with that general information!
 
 # Load the Data
 ```{r echo=FALSE, Load_the_Data}
@@ -191,17 +185,8 @@ summary(prosper$Term)
 
 ```
 Most loan-terms are 36-month, with some 60-month, and a negligible amount of 12-month terms.Interestingly there are no records with 24 and 48 months tenure.
-> **Tip**: Make sure that you leave a blank line between the start / end of
-each code block and the end / start of your Markdown text so that it is
-formatted nicely in the knitted text. Note as well that text on consecutive
-lines is treated as a single space. Make sure you have a blank line between
-your paragraphs so that they too are formatted for easy readability.
 
 # Univariate Analysis
-
-> **Tip**: Now that you've completed your univariate explorations, it's time to
-reflect on and summarize what you've found. Use the questions below to help you
-gather your observations and add your own if you have other thoughts!
 
 ### What is the structure of your dataset?
 There are 113937 loans in this dataset and 81 dataset (I only use 11 among them)
@@ -244,7 +229,7 @@ I formatted two variable (i.e. ProsperRating and ListingCategory) names to be mo
 
 ```{r echo=FALSE, Bivariate_Plots}
 # Loan amount vs number of investors
-ggplot(prosper, aes(LoanOriginalAmount, Investors)) 
+ggplot(prosper, aes(LoanOriginalAmount, Investors)) +
   scale_x_continuous(breaks = seq(0, 35000, 5000)) +
   geom_point(alpha = 1/50,
              position = 'jitter')
@@ -284,9 +269,6 @@ ggplot(aes(x = ProsperRating, y = BorrowerAPR * 100,
 ```
 The boxplots above show the relationship between borrower's Prosper rating and their assigned Annual Percentage Rate (APR).The variation in APRs also decreases as the loans get less riskier as displayed by the decreasing size of the boxes in the boxplots when going from 'E' to 'AA'.
 # Bivariate Analysis
-
-> **Tip**: As before, summarize what you found in your bivariate explorations
-here. Use the questions below to guide your discussion.
 
 ### Talk about some of the relationships you observed in this part of the \
 investigation. How did the feature(s) of interest vary with other features in \
@@ -454,9 +436,7 @@ ggplot(aes(x = DebtToIncomeRatio, y = BorrowerAPR,
 
 This is a great plot with a lot of information.A scatter plot of borrower's APR and the debt to income ratio of the borrower, with the colors describing the risk category given to the particular loan.
 It displays the progression from a safe green to a risky red.
-Removing outliers that spread the graph by limited the x-axis by removing 0.05% of the points furthest away from the median.
-
-When APR increases as the rating gets riskier and most people tend to have debt-to-income ratios below 1, regardless of risk category.Also, there is this unusual horizontal line in the 'HR' category that extends past 1 and all the way to
+Removing outliers that spread the graph by limited the x-axis by removing 0.05% of the points furthest away from the median.When APR increases as the rating gets riskier and most people tend to have debt-to-income ratios below 1, regardless of risk category.Also, there is this unusual horizontal line in the 'HR' category that extends past 1 and all the way to
 ------
 
 # Reflection
