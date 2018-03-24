@@ -1,5 +1,3 @@
-# udacity-eda-project
-
 # Exploring Prosper Loan Data by Abdullah Muhammed
 
 ## Abstract
