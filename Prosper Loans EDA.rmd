@@ -4,6 +4,10 @@ Exploring Prosper Loan Data by Abdullah Muhammed
 
 [Prosper](https://www.prosper.com/) is a peer-to-peer lending platform that aims to connect people who need money with those who have money to invest. In this Exploratory Data Analysis, I explore a Prosper dataset  contains 113,937 loans with 81 variables on each loan, including loan amount, borrower rate (or interest rate), current loan status, borrower income, borrower employment status, borrower credit history, and the latest payment information.
 
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE)
+
+```
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE, packages}
 # Load all of the packages that you end up using in your analysis in this code
@@ -62,9 +66,10 @@ ggplot(prosper, aes(x=ListingCategory)) +
   ylab('Number of Loans')
 
 ```
+
  Majority loans are debt consolidations, with small but significant amounts of home improvement and business loans.It is really strange that people took loans to reimburse loans/debts and lenders also issued loans to these people.
  
-# How much do people borrow?
+### How much do people borrow?
 
 ```{r echo=FALSE, Univariate_Plots}
 # Number of Loans by Loan Amount
@@ -72,6 +77,7 @@ qplot(x = LoanOriginalAmount, data = prosper,
       binwidth = 1000, colour = I("#424242"), fill = I("#0077C0")) +
   scale_x_continuous(breaks = seq(0, 35000, 5000))
 ```
+
 Most loans lies below $15,000, which indicates that most of the borrowers using Prosper are looking for small(er) loans  and spikes in the count on round values like $10,000, $15,000, and even $20,000 and $25,000.
 
 ```{r}
@@ -79,12 +85,14 @@ summary(prosper$LoanOriginalAmount)
 
 ```
 The minimum loan is 1000, with the median of 6500 and mean of 8337.
-# How much do borrowers earn(Income Range)?
+### How much do borrowers earn(Income Range)?
 
 ```{r}
 qplot(IncomeRange, data = prosper) + 
-    theme(axis.text.x = element_text(angle = -90))
+    theme(axis.text.x = element_text(angle = -90))+
+  ggtitle('How much do borrowers earn?')
 ```
+
 Most of borrowers Income ranges from $25,000 - $74,999.
 Question: Why does there is borrowers with "Zero"" income?
 Maybe exploring more information about those borrowers would make it clearer that why they can get the loan.
@@ -93,7 +101,8 @@ Maybe exploring more information about those borrowers would make it clearer tha
 # Histogram Showing the distribution of Borrower Rate
 ggplot(aes(x=BorrowerRate),data = prosper)+
   geom_histogram(binwidth = 0.01, fill='#5760AB')+
-    scale_x_continuous(limits = c(0.0, 0.4), breaks = seq(0.0, 0.4, 0.1))
+    scale_x_continuous(limits = c(0.0, 0.4), breaks = seq(0.0, 0.4, 0.1))+
+ggtitle('Distribution of Borrower Rate')
 
 ```
 ```{r}
@@ -139,15 +148,18 @@ ggplot(prosper, aes(ProsperRating, LoanOriginalAmount)) +
   ylab('Amount Loaned')
 
 ```
+
 The plot looked approximately normally distrubuted, except for "NA" Not Applicable.'C' is the most frequent rating in our data and the highest (AA) and the lowest (HR) rating are less common comparing with other ratings in between.Null values because Prosper Rating only applicable for loans originated after July 2009.
 
 ```{r}
 # Boxplots of loan amounts by Prosper Rating
 ggplot(subset(prosper, !is.na(ProsperRating)),
        aes(ProsperRating, LoanOriginalAmount)) +
-  geom_boxplot(aes(color = ProsperRating))
+  geom_boxplot(aes(color = ProsperRating))+
+  ggtitle('LoanOriginalAmount for ProsperRating') 
 
 ```
+
 These boxplots shows with higher prosper rating you get higher loan amounts, and less than 'C' you chance decrease.
 What most
 ```{r}
@@ -158,19 +170,23 @@ ggplot(aes(x = reorder(Occupation, Occupation,
        data = prosper) +
   geom_bar() +
   xlab("Occupation") +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
+ggtitle('occupation of borrowers')
 ```
+ 
  'Other' and 'Professional' are ambiguous options for occupations and they are away from the rest of the occupations include analysts, accountants, computer programmers, teachers and executives.
  
 ```{r}
-#Bar chart show distribution among State
+#Bar chart show distribution among States
 ggplot(aes(x = reorder(BorrowerState, BorrowerState, 
                        function(x) length(x)),
            fill = I("#0077C0")),data = prosper) +
   geom_bar() +
   xlab("Borrower State") +
+ggtitle('Distribution of Borrower\'s among States') +
 theme(axis.text.x = element_text(angle = 90))
 ```
+ 
  California is by far the biggest, and that was expected because it is the state where Prosper was founded followed by other popular states include Florida, New York, Texas and Illinois.
  
 ```{r}
@@ -232,9 +248,11 @@ I formatted two variable (i.e. ProsperRating and ListingCategory) names to be mo
 ggplot(prosper, aes(LoanOriginalAmount, Investors)) +
   scale_x_continuous(breaks = seq(0, 35000, 5000)) +
   geom_point(alpha = 1/50,
-             position = 'jitter')
+             position = 'jitter')+
+ggtitle('Loan amount vs number of investors')
 
 ```
+
 The number of investors per loan seem to be heavily positive skewed.Spikes on Loan amount 5000,1000,2000 and 2500 indicates most borrowers want fixed and relatively small loans.
 
 
@@ -244,8 +262,10 @@ The number of investors per loan seem to be heavily positive skewed.Spikes on Lo
 ggplot(aes(y = LoanOriginalAmount, x = IsBorrowerHomeowner), data = prosper) +
   geom_boxplot() +
   scale_y_continuous(
-    limits = c(0, quantile(prosper$LoanOriginalAmount, 0.99, na.rm = TRUE)))
+    limits = c(0, quantile(prosper$LoanOriginalAmount, 0.99, na.rm = TRUE)))+
+  ggtitle('Home Owner and Loan Amount') 
 ```
+
 Borrower who home owner had receive bigger loan than other one who not own the home.
 
 ```{r echo=FALSE}
@@ -255,8 +275,10 @@ ggplot(aes(x = ProsperRating, y = CreditScoreRangeUpper,
        data = prosper) +
   geom_boxplot(lwd = 0.75, outlier.color = I("#FBB448"), outlier.shape = 1) +
   scale_x_discrete(limits = rating) +
-  coord_cartesian(ylim = c(600, 950))
+  coord_cartesian(ylim = c(600, 950))+
+  ggtitle('Credit Scorer and Prosper Rating') 
 ```
+
 High Credit Score Upper is assign to excellent rating (AA), and surprise is Poor prosper rating "HR" have high credit score that rating E.
 
 ```{r}
@@ -264,9 +286,11 @@ ggplot(aes(x = ProsperRating, y = BorrowerAPR * 100,
            fill = I("#F5F5F5"), color = I("#506E86")),
       data = subset(prosper, !is.na(BorrowerAPR))) +
   geom_boxplot(lwd = 0.75, outlier.colour = I("#FBB448"), outlier.shape = 1) + 
-  scale_x_discrete(limits = rating) +
+  scale_x_discrete(limits = rating)+
+  ggtitle('Borrower APR and Prosper Rating') +
   ylab("Borrower APR")
 ```
+
 The boxplots above show the relationship between borrower's Prosper rating and their assigned Annual Percentage Rate (APR).The variation in APRs also decreases as the loans get less riskier as displayed by the decreasing size of the boxes in the boxplots when going from 'E' to 'AA'.
 # Bivariate Analysis
 
@@ -292,7 +316,8 @@ I found the strongest relationshipbetween ProsperRating and BorrowerAPR.
   geom_point() +
   xlim(0, quantile(prosper$DelinquenciesLast7Years, 0.99, na.rm = T)) +
   ylim(0, quantile(prosper$AmountDelinquent, 0.99, na.rm = T)) +
-  facet_wrap(~EmploymentStatus)
+  facet_wrap(~EmploymentStatus)+
+ggtitle('Relationship between Delinquencies and Employment Status')
 ```
 
 I wanted to see the relationship between the amount borrowers were delinquent and the number of delinquencies they've had over the last 7 years then separated that by employment status to see if people that weren't full employed had higher delinquencies or owed more money.Overplotting and general dispersion of data doesn't really reveal the trend
@@ -303,12 +328,14 @@ ggplot(aes(x=DebtToIncomeRatio), data=subset(prosper,DebtToIncomeRatio<=1)) +
                      fill  = IncomeRange), 
                  alpha = 0.5) +
     xlim(0, quantile(prosper$DebtToIncomeRatio, 0.95, na.rm = T)) + 
+    ggtitle('Borrowers APR to Income Range') +
     facet_wrap(~IncomeRange, ncol=2, 
                scales = "free")
 ```
 ```{r}
 quantile(prosper$DebtToIncomeRatio, 0.99, na.rm=T)
 ```
+
 After limiting the ratio to less or equal to 1, we include more than 99% of the data but get a much finer graphic. The distribution has a bell shape and is left-skewed.Income ranges from $25,000 - $74,999 are normaly distributed.
 
 ```{r}
@@ -325,10 +352,12 @@ ggplot(aes(x = DebtToIncomeRatio, y = BorrowerAPR,
                        labels = rev(rating),
                        limits = c(1, 7),
                        name = 'Category of Risk') +
+   ggtitle('Borrowers APR to Debt To Income Ratio ') +
   theme(legend.position = "right", 
         legend.direction = "vertical",
         legend.key.size = unit(1, "cm"))
 ```
+ 
  A scatter plot of borrower's APR and the debt to income ratio of the borrower, with the colors describing the risk category given to the particular loan.It displays the progression from a safe green to a risky red.Removing outliers that spread the graph by limited the x-axis by removing 0.05% of the points furthest away from the median.When APR increases as the rating gets riskier.Most people tend to have debt-to-income ratios below 1, regardless of risk category
 
 ```{r}
@@ -355,6 +384,7 @@ ggplot(data = subset(prosper,ProsperRating %in% rating),
         legend.direction = "vertical",
         legend.key.size = unit(1, "cm"))
 ```
+
 This plot shows the relationship between a lender yield on the loan and the number of investors.And I made individual graphs to show that relationsip based on the duration of the loan and finally coloured it based on risk rating.Most data are in 36 and left-skewed.Increase in prosper rating show increasing in how much lender yield.
 
 # Multivariate Analysis
@@ -372,7 +402,9 @@ High amount of loans should generate high risk, since it's risky if someone does
 
 ### OPTIONAL: Did you create any models with your dataset? Discuss the \
 strengths and limitations of your model.
-No,I did not.
+
+>  No,I did not.
+
 ------
 
 # Final Plots and Summary
@@ -391,6 +423,7 @@ ggplot(aes(x=ListingCategory, fill = TermInMonth ), data = prosper) +
   ylab('Number of Loans')
 
 ```
+
 I have chosen this plot because of it's combination of detail and simplicity. It makes for an easy way to evaluate why people borrow money and period of pay this loan.Scale transformed in log scale so we can clearly see distibuation of number of loans in  Category of taking loans.Except for "Other" and "Not Applicable" majority loans are debt consolidations then home Improvments then business.people took loans to reimburse loans/debts thay took prevoiusly.
 Three years term is most popular choice for almost all categories of loans.
 
@@ -405,6 +438,7 @@ ggplot(aes(x = ProsperRating, y = BorrowerAPR * 100,
       data = subset(prosper, !is.na(BorrowerAPR))) +
   geom_boxplot(lwd = 0.75, outlier.colour = I("#FBB448"), outlier.shape = 1) + 
   scale_x_discrete(limits = rating) +
+  ggtitle('Borrower APR and ProsperRating') +
   ylab("Borrower APR")
 ```
 
@@ -428,7 +462,8 @@ ggplot(aes(x = DebtToIncomeRatio, y = BorrowerAPR,
                        name = 'Category of Risk') +
   theme(legend.position = "right", 
         legend.direction = "vertical",
-        legend.key.size = unit(1, "cm")) 
+        legend.key.size = unit(1, "cm"))+ 
+ggtitle('Borrower APR and  Debt To Income Ratio')
 
 ```
 
